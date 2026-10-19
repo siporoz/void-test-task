@@ -69,12 +69,14 @@ export default function ProjectBuilder() {
     )
   }
 
+  // ИСПРАВЛЕНО: основная область страницы не была обозначена, а заголовок начинался с h2.
+  // Заменил контейнер на main, а главный заголовок на h1.
   return (
-    <div
+    <main
       className="project-builder"
       style={{ maxWidth: 700, margin: '0 auto', fontFamily: 'sans-serif' }}
     >
-      <h2>Состав проекта</h2>
+      <h1>Состав проекта</h1>
 
       <div
         className="add-service"
@@ -243,6 +245,6 @@ export default function ProjectBuilder() {
           Пока не добавлено ни одной услуги
         </p>
       )}
-    </div>
+    </main>
   )
 }
