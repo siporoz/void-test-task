@@ -1,27 +1,24 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-interface Service {
-  id: number
-  name: string
-  price: number
-}
-
-interface ServiceItem {
-  service: Service
-  quantity: number
-}
-
-const availableServices: Service[] = [
-  { id: 1, name: 'Разработка лендинга', price: 50000 },
-  { id: 2, name: 'Интернет-магазин', price: 150000 },
-  { id: 3, name: 'Корпоративный портал', price: 300000 },
-  { id: 4, name: 'SEO-оптимизация', price: 20000 },
-]
+import {
+  availableServices,
+  loadSelectedServices,
+  saveSelectedServices,
+  type ServiceItem,
+} from './projectServices'
 
 export default function ProjectBuilder() {
   // ИСПРАВЛЕНО: добавленные услуги не появлялись в таблице и терялись при рендере.
   // Обычный массив не обновлял интерфейс. Теперь список хранится в useState.
-  const [selectedServices, setSelectedServices] = useState<ServiceItem[]>([])
+  // loadSelectedServices восстанавливает список из localStorage при загрузке страницы.
+  const [selectedServices, setSelectedServices] =
+    useState<ServiceItem[]>(loadSelectedServices)
+
+  // Сохраняем изменения списка. Чтение и запись localStorage вынесены в projectServices.ts.
+  useEffect(() => {
+    saveSelectedServices(selectedServices)
+  }, [selectedServices])
+
   // ИСПРАВЛЕНО: кнопка «Добавить» оставалась недоступной после выбора услуги.
   // Обычная переменная не вызывала обновление интерфейса. Заменили её на useState.
   const [selectedServiceId, setSelectedServiceId] = useState<number | ''>('')
