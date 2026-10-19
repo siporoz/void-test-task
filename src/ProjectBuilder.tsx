@@ -88,6 +88,8 @@ export default function ProjectBuilder() {
           alignItems: 'center',
         }}
       >
+        {/* ИСПРАВЛЕНО: присваивание переменной не обновляло выбор и кнопку.
+            Теперь обработчик меняет состояние через setSelectedServiceId. */}
         <select
           value={selectedServiceId}
           onChange={(e) => {
@@ -104,6 +106,8 @@ export default function ProjectBuilder() {
           ))}
         </select>
 
+        {/* ИСПРАВЛЕНО: ввод не обновлял состояние, а пустое поле превращалось в 0.
+            Вызываем setQuantity, сохраняем пустую строку и связываем поле с подсказкой об ошибке. */}
         <input
           aria-label="Количество"
           aria-invalid={!isQuantityValid}
@@ -119,6 +123,8 @@ export default function ProjectBuilder() {
           style={{ width: 80, padding: '8px 12px' }}
         />
 
+        {/* ИСПРАВЛЕНО: кнопку можно было нажать с неверным количеством.
+            Теперь она недоступна, пока не выбрана услуга и не введено целое число от 1 до 10. */}
         <button
           onClick={addService}
           disabled={!selectedServiceId || !isQuantityValid}
@@ -127,6 +133,8 @@ export default function ProjectBuilder() {
         </button>
       </div>
 
+      {/* ИСПРАВЛЕНО: раньше не было объяснения ошибки ввода.
+          Показываем подсказку, если количество не прошло проверку. */}
       {!isQuantityValid && (
         <p id="quantity-error" role="alert">
           Введите целое количество от 1 до 10.
