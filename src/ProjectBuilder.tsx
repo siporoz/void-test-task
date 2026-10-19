@@ -108,20 +108,33 @@ export default function ProjectBuilder() {
 
         {/* ИСПРАВЛЕНО: ввод не обновлял состояние, а пустое поле превращалось в 0.
             Вызываем setQuantity, сохраняем пустую строку и связываем поле с подсказкой об ошибке. */}
-        <input
-          aria-label="Количество"
-          aria-invalid={!isQuantityValid}
-          aria-describedby={isQuantityValid ? undefined : 'quantity-error'}
-          type="number"
-          min={1}
-          max={10}
-          step={1}
-          value={quantity}
-          onChange={(e) => {
-            setQuantity(e.target.value === '' ? '' : Number(e.target.value))
-          }}
-          style={{ width: 80, padding: '8px 12px' }}
-        />
+        <div>
+          <input
+            aria-label="Количество"
+            aria-invalid={!isQuantityValid}
+            aria-describedby={isQuantityValid ? undefined : 'quantity-error'}
+            type="number"
+            min={1}
+            max={10}
+            step={1}
+            value={quantity}
+            onChange={(e) => {
+              setQuantity(e.target.value === '' ? '' : Number(e.target.value))
+            }}
+            style={{ width: 80, padding: '8px 12px' }}
+          />
+          {/* ИСПРАВЛЕНО: при неверном количестве не было сообщения об ошибке.
+              Добавил вывод ошибки под полем, если введено не целое число от 1 до 10. */}
+          {!isQuantityValid && (
+            <p
+              id="quantity-error"
+              role="alert"
+              style={{ color: 'red', margin: '4px 0 0', maxWidth: 160 }}
+            >
+              Введите целое количество от 1 до 10.
+            </p>
+          )}
+        </div>
 
         {/* ИСПРАВЛЕНО: кнопку можно было нажать с неверным количеством.
             Теперь она недоступна, пока не выбрана услуга и не введено целое число от 1 до 10. */}
@@ -132,14 +145,6 @@ export default function ProjectBuilder() {
           Добавить
         </button>
       </div>
-
-      {/* ИСПРАВЛЕНО: раньше не было объяснения ошибки ввода.
-          Показываем подсказку, если количество не прошло проверку. */}
-      {!isQuantityValid && (
-        <p id="quantity-error" role="alert">
-          Введите целое количество от 1 до 10.
-        </p>
-      )}
 
       {selectedServices.length > 0 ? (
         <table
