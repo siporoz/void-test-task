@@ -20,9 +20,12 @@ const availableServices: Service[] = [
 
 export default function ProjectBuilder() {
   let selectedServices: ServiceItem[] = []
-  // Храним выбор в состоянии, чтобы после выбора услуги кнопка «Добавить» становилась доступной.
+  // ИСПРАВЛЕНО: кнопка «Добавить» оставалась недоступной после выбора услуги.
+  // Обычная переменная не вызывала обновление интерфейса. Заменили её на useState.
   const [selectedServiceId, setSelectedServiceId] = useState<number | ''>('')
-  let quantity: number = 1
+  // ИСПРАВЛЕНО: введённое количество сбрасывалось на 1 при выборе услуги.
+  // При каждом рендере локальная переменная создавалась заново. useState сохраняет значение.
+  const [quantity, setQuantity] = useState(1)
 
   let totalPrice = 0
   for (const item of selectedServices) {
@@ -86,7 +89,7 @@ export default function ProjectBuilder() {
           max={10}
           value={quantity}
           onChange={(e) => {
-            quantity = Number(e.target.value)
+            setQuantity(Number(e.target.value))
           }}
           style={{ width: 80, padding: '8px 12px' }}
         />
