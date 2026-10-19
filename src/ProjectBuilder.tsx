@@ -19,7 +19,9 @@ const availableServices: Service[] = [
 ]
 
 export default function ProjectBuilder() {
-  let selectedServices: ServiceItem[] = []
+  // ИСПРАВЛЕНО: добавленные услуги не появлялись в таблице и терялись при рендере.
+  // Обычный массив не обновлял интерфейс. Теперь список хранится в useState.
+  const [selectedServices, setSelectedServices] = useState<ServiceItem[]>([])
   // ИСПРАВЛЕНО: кнопка «Добавить» оставалась недоступной после выбора услуги.
   // Обычная переменная не вызывала обновление интерфейса. Заменили её на useState.
   const [selectedServiceId, setSelectedServiceId] = useState<number | ''>('')
@@ -36,19 +38,27 @@ export default function ProjectBuilder() {
     const service = availableServices.find((s) => s.id === selectedServiceId)
     if (!service) return
 
-    const existing = selectedServices.find((item) => item.service === service)
-    if (existing) {
-      existing.quantity += quantity
-    } else {
-      selectedServices.push({ service, quantity })
-    }
+    // ИСПРАВЛЕНО: push и изменение quantity напрямую не вызывали обновление таблицы.
+    // Создаём новый массив из актуального состояния; при повторном добавлении увеличиваем количество.
+    setSelectedServices((items) => {
+      const existing = items.find((item) => item.service.id === service.id)
+      if (existing) {
+        return items.map((item) =>
+          item.service.id === service.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item,
+        )
+      }
+      return [...items, { service, quantity }]
+    })
   }
 
   function removeService(item: ServiceItem) {
-    const index = selectedServices.indexOf(item)
-    if (index > -1) {
-      selectedServices.splice(index, 1)
-    }
+    // ИСПРАВЛЕНО: splice менял массив напрямую, поэтому удаление не обновляло таблицу.
+    // Передаём в состояние новый массив без удалённой услуги.
+    setSelectedServices((items) =>
+      items.filter((entry) => entry.service.id !== item.service.id),
+    )
   }
 
   return (
