@@ -27,7 +27,16 @@ export default function ProjectBuilder() {
   const [selectedServiceId, setSelectedServiceId] = useState<number | ''>('')
   // ИСПРАВЛЕНО: введённое количество сбрасывалось на 1 при выборе услуги.
   // При каждом рендере локальная переменная создавалась заново. useState сохраняет значение.
-  const [quantity, setQuantity] = useState(1)
+  const [quantity, setQuantity] = useState<number | ''>(1)
+
+  // ИСПРАВЛЕНО: вручную можно было добавить 0, отрицательное число или дробь.
+  // min и max не проверяли значение в обработчике. Проверяем целое число от 1 до 10.
+  // Пустое поле храним отдельно: Number('') превращал его в 0.
+  const isQuantityValid =
+    typeof quantity === 'number' &&
+    Number.isInteger(quantity) &&
+    quantity >= 1 &&
+    quantity <= 10
 
   let totalPrice = 0
   for (const item of selectedServices) {
@@ -35,6 +44,8 @@ export default function ProjectBuilder() {
   }
 
   function addService() {
+    if (quantity === '' || !isQuantityValid) return
+
     const service = availableServices.find((s) => s.id === selectedServiceId)
     if (!service) return
 
@@ -94,20 +105,33 @@ export default function ProjectBuilder() {
         </select>
 
         <input
+          aria-label="Количество"
+          aria-invalid={!isQuantityValid}
+          aria-describedby={isQuantityValid ? undefined : 'quantity-error'}
           type="number"
           min={1}
           max={10}
+          step={1}
           value={quantity}
           onChange={(e) => {
-            setQuantity(Number(e.target.value))
+            setQuantity(e.target.value === '' ? '' : Number(e.target.value))
           }}
           style={{ width: 80, padding: '8px 12px' }}
         />
 
-        <button onClick={addService} disabled={!selectedServiceId}>
+        <button
+          onClick={addService}
+          disabled={!selectedServiceId || !isQuantityValid}
+        >
           Добавить
         </button>
       </div>
+
+      {!isQuantityValid && (
+        <p id="quantity-error" role="alert">
+          Введите целое количество от 1 до 10.
+        </p>
+      )}
 
       {selectedServices.length > 0 ? (
         <table
