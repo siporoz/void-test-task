@@ -1,28 +1,39 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-interface Service {
-  id: number
-  name: string
-  price: number
-}
-
-interface ServiceItem {
-  service: Service
-  quantity: number
-}
-
-const availableServices: Service[] = [
-  { id: 1, name: 'Разработка лендинга', price: 50000 },
-  { id: 2, name: 'Интернет-магазин', price: 150000 },
-  { id: 3, name: 'Корпоративный портал', price: 300000 },
-  { id: 4, name: 'SEO-оптимизация', price: 20000 },
-]
+import {
+  availableServices,
+  loadSelectedServices,
+  saveSelectedServices,
+  type ServiceItem,
+} from './projectServices'
 
 export default function ProjectBuilder() {
-  let selectedServices: ServiceItem[] = []
-  // Храним выбор в состоянии, чтобы после выбора услуги кнопка «Добавить» становилась доступной.
+  // ИСПРАВЛЕНО: добавленные услуги не появлялись в таблице и терялись при рендере.
+  // Обычный массив не обновлял интерфейс. Теперь список хранится в useState.
+  // loadSelectedServices восстанавливает список из localStorage при загрузке страницы.
+  const [selectedServices, setSelectedServices] =
+    useState<ServiceItem[]>(loadSelectedServices)
+
+  // Сохраняем изменения списка. Чтение и запись localStorage вынесены в projectServices.ts.
+  useEffect(() => {
+    saveSelectedServices(selectedServices)
+  }, [selectedServices])
+
+  // ИСПРАВЛЕНО: кнопка «Добавить» оставалась недоступной после выбора услуги.
+  // Обычная переменная не вызывала обновление интерфейса. Заменили её на useState.
   const [selectedServiceId, setSelectedServiceId] = useState<number | ''>('')
-  let quantity: number = 1
+  // ИСПРАВЛЕНО: введённое количество сбрасывалось на 1 при выборе услуги.
+  // При каждом рендере локальная переменная создавалась заново. useState сохраняет значение.
+  const [quantity, setQuantity] = useState<number | ''>(1)
+
+  // ИСПРАВЛЕНО: вручную можно было добавить 0, отрицательное число или дробь.
+  // min и max не проверяли значение в обработчике. Проверяем целое число от 1 до 10.
+  // Пустое поле храним отдельно: Number('') превращал его в 0.
+  const isQuantityValid =
+    typeof quantity === 'number' &&
+    Number.isInteger(quantity) &&
+    quantity >= 1 &&
+    quantity <= 10
 
   let totalPrice = 0
   for (const item of selectedServices) {
@@ -30,30 +41,42 @@ export default function ProjectBuilder() {
   }
 
   function addService() {
+    if (quantity === '' || !isQuantityValid) return
+
     const service = availableServices.find((s) => s.id === selectedServiceId)
     if (!service) return
 
-    const existing = selectedServices.find((item) => item.service === service)
-    if (existing) {
-      existing.quantity += quantity
-    } else {
-      selectedServices.push({ service, quantity })
-    }
+    // ИСПРАВЛЕНО: push и изменение quantity напрямую не вызывали обновление таблицы.
+    // Создаём новый массив из актуального состояния; при повторном добавлении увеличиваем количество.
+    setSelectedServices((items) => {
+      const existing = items.find((item) => item.service.id === service.id)
+      if (existing) {
+        return items.map((item) =>
+          item.service.id === service.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item,
+        )
+      }
+      return [...items, { service, quantity }]
+    })
   }
 
   function removeService(item: ServiceItem) {
-    const index = selectedServices.indexOf(item)
-    if (index > -1) {
-      selectedServices.splice(index, 1)
-    }
+    // ИСПРАВЛЕНО: splice менял массив напрямую, поэтому удаление не обновляло таблицу.
+    // Передаем в состояние новый массив без удаленной услуги.
+    setSelectedServices((items) =>
+      items.filter((entry) => entry.service.id !== item.service.id),
+    )
   }
 
+  // ИСПРАВЛЕНО: основная область страницы не была обозначена, а заголовок начинался с h2.
+  // Заменил контейнер на main, а главный заголовок на h1.
   return (
-    <div
+    <main
       className="project-builder"
       style={{ maxWidth: 700, margin: '0 auto', fontFamily: 'sans-serif' }}
     >
-      <h2>Состав проекта</h2>
+      <h1>Состав проекта</h1>
 
       <div
         className="add-service"
@@ -64,34 +87,71 @@ export default function ProjectBuilder() {
           alignItems: 'center',
         }}
       >
-        <select
-          value={selectedServiceId}
-          onChange={(e) => {
-            setSelectedServiceId(Number(e.target.value))
-          }}
-        >
-          <option value="" disabled>
-            Выберите услугу
-          </option>
-          {availableServices.map((service) => (
-            <option key={service.id} value={service.id}>
-              {service.name} — {service.price.toLocaleString()} ₽
+        {/* ИСПРАВЛЕНО: присваивание переменной не обновляло выбор и кнопку.
+            Теперь обработчик меняет состояние через setSelectedServiceId. */}
+        {/* ИСПРАВЛЕНО: у полей не было видимых подписей, а у выбора услуги — доступного названия.
+            Добавил подписи «Услуга» и «Количество», связал их с полями через htmlFor и id. */}
+        <div>
+          <label htmlFor="service" style={{ display: 'block' }}>
+            Услуга
+          </label>
+          <select
+            id="service"
+            value={selectedServiceId}
+            onChange={(e) => {
+              setSelectedServiceId(Number(e.target.value))
+            }}
+          >
+            <option value="" disabled>
+              Выберите услугу
             </option>
-          ))}
-        </select>
+            {availableServices.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name} — {service.price.toLocaleString()} ₽
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <input
-          type="number"
-          min={1}
-          max={10}
-          value={quantity}
-          onChange={(e) => {
-            quantity = Number(e.target.value)
-          }}
-          style={{ width: 80, padding: '8px 12px' }}
-        />
+        {/* ИСПРАВЛЕНО: ввод не обновлял состояние, а пустое поле превращалось в 0.
+            Вызываем setQuantity, сохраняем пустую строку и связываем поле с подсказкой об ошибке. */}
+        <div>
+          <label htmlFor="quantity" style={{ display: 'block' }}>
+            Количество
+          </label>
+          <input
+            id="quantity"
+            aria-invalid={!isQuantityValid}
+            aria-describedby={isQuantityValid ? undefined : 'quantity-error'}
+            type="number"
+            min={1}
+            max={10}
+            step={1}
+            value={quantity}
+            onChange={(e) => {
+              setQuantity(e.target.value === '' ? '' : Number(e.target.value))
+            }}
+            style={{ width: 80, padding: '8px 12px' }}
+          />
+          {/* ИСПРАВЛЕНО: при неверном количестве не было сообщения об ошибке.
+              Добавил вывод ошибки под полем, если введено не целое число от 1 до 10. */}
+          {!isQuantityValid && (
+            <p
+              id="quantity-error"
+              role="alert"
+              style={{ color: 'red', margin: '4px 0 0', maxWidth: 160 }}
+            >
+              Введите целое количество от 1 до 10.
+            </p>
+          )}
+        </div>
 
-        <button onClick={addService} disabled={!selectedServiceId}>
+        {/* ИСПРАВЛЕНО: кнопку можно было нажать с неверным количеством.
+            Теперь она недоступна, пока не выбрана услуга и не введено целое число от 1 до 10. */}
+        <button
+          onClick={addService}
+          disabled={!selectedServiceId || !isQuantityValid}
+        >
           Добавить
         </button>
       </div>
@@ -185,6 +245,6 @@ export default function ProjectBuilder() {
           Пока не добавлено ни одной услуги
         </p>
       )}
-    </div>
+    </main>
   )
 }
