@@ -63,7 +63,7 @@ export default function ProjectBuilder() {
 
   function removeService(item: ServiceItem) {
     // ИСПРАВЛЕНО: splice менял массив напрямую, поэтому удаление не обновляло таблицу.
-    // Передаём в состояние новый массив без удалённой услуги.
+    // Передаем в состояние новый массив без удаленной услуги.
     setSelectedServices((items) =>
       items.filter((entry) => entry.service.id !== item.service.id),
     )
@@ -87,27 +87,38 @@ export default function ProjectBuilder() {
       >
         {/* ИСПРАВЛЕНО: присваивание переменной не обновляло выбор и кнопку.
             Теперь обработчик меняет состояние через setSelectedServiceId. */}
-        <select
-          value={selectedServiceId}
-          onChange={(e) => {
-            setSelectedServiceId(Number(e.target.value))
-          }}
-        >
-          <option value="" disabled>
-            Выберите услугу
-          </option>
-          {availableServices.map((service) => (
-            <option key={service.id} value={service.id}>
-              {service.name} — {service.price.toLocaleString()} ₽
+        {/* ИСПРАВЛЕНО: у полей не было видимых подписей, а у выбора услуги — доступного названия.
+            Добавил подписи «Услуга» и «Количество», связал их с полями через htmlFor и id. */}
+        <div>
+          <label htmlFor="service" style={{ display: 'block' }}>
+            Услуга
+          </label>
+          <select
+            id="service"
+            value={selectedServiceId}
+            onChange={(e) => {
+              setSelectedServiceId(Number(e.target.value))
+            }}
+          >
+            <option value="" disabled>
+              Выберите услугу
             </option>
-          ))}
-        </select>
+            {availableServices.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name} — {service.price.toLocaleString()} ₽
+              </option>
+            ))}
+          </select>
+        </div>
 
         {/* ИСПРАВЛЕНО: ввод не обновлял состояние, а пустое поле превращалось в 0.
             Вызываем setQuantity, сохраняем пустую строку и связываем поле с подсказкой об ошибке. */}
         <div>
+          <label htmlFor="quantity" style={{ display: 'block' }}>
+            Количество
+          </label>
           <input
-            aria-label="Количество"
+            id="quantity"
             aria-invalid={!isQuantityValid}
             aria-describedby={isQuantityValid ? undefined : 'quantity-error'}
             type="number"
